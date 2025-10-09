@@ -36,4 +36,5 @@ time.sleep(3)
 sht.range('c12').value=[[1,2],[3,4]]
 time.sleep(3)
 wb.save()
+wb.close()
 app.quit()
