@@ -1,3 +1,5 @@
+# 包含改变单元格行高列宽的改变方法
+
 import xlwings as xw
 import time
 # 打开app
@@ -9,6 +11,7 @@ WorkSheet=WorkBook.sheets['sheet1']
 # 为了效果明显，在打开工作表，开始操作之前，先暂停了5秒（非必要操作）
 time.sleep(3)
 
+# 调整行高列宽
 # 调整某一单元格列宽
 TargetCell=WorkSheet.range('a1')
 TargetCell.column_width=50
@@ -57,6 +60,8 @@ time.sleep(2)
 # 自动调整某一区域的列宽与行高
 TargetCell=WorkSheet.range('c11:d12')
 TargetCell.autofit()
+
+# 
 
 WorkBook.close()
 app.quit()
