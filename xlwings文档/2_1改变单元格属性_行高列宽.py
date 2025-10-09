@@ -37,8 +37,8 @@ TargetCell=WorkSheet.range('a1')
 TargetCell.rows.autofit()
 time.sleep(2)
 
-# 自动调整某一区域的行高至合适
-TargetCell=WorkSheet.range('a2:a4')
+# 自动调整某一区域的行高至合适，会按照最大的来调整
+TargetCell=WorkSheet.range('a1:b1')
 TargetCell.rows.autofit()
 time.sleep(2)
 
@@ -47,8 +47,8 @@ TargetCell=WorkSheet.range('a1')
 TargetCell.columns.autofit()
 time.sleep(2)
 
-#自动调整某一区域的的列宽至合适
-TargetCell=WorkSheet.range('b2:d2')
+#自动调整某一区域的的列宽至合适，会按照最大的来调整
+TargetCell=WorkSheet.range('a1:a4')
 TargetCell.columns.autofit()
 time.sleep(2)
 
@@ -60,8 +60,6 @@ time.sleep(2)
 # 自动调整某一区域的列宽与行高
 TargetCell=WorkSheet.range('c11:d12')
 TargetCell.autofit()
-
-# 
 
 WorkBook.close()
 app.quit()
