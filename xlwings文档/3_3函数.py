@@ -65,5 +65,4 @@ WorkSheet.range('E12').formula = '=MATCH("1.7m",B10:B12,0)'
 #要查找的值，要搜索的单行或单列区域，匹配类型（-1,0,1）
 time.sleep(2)
 
-
 app.quit()
