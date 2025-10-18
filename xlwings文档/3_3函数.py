@@ -1,7 +1,7 @@
 import xlwings as xw
 import time
 app=xw.App(add_book=False,visible=True)
-WorkBook=app.books.open('test1.xlsx')
+WorkBook=app.books.open('test2.xlsx')
 WorkSheet=WorkBook.sheets['sheet1']
 time.sleep(2)
 # 方法1：直接输入公式,向单元格输出
