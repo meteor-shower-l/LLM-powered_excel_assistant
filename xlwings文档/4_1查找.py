@@ -1,5 +1,5 @@
 import xlwings as xw
-def find_all(start_cell,end_cell,target_string):
+def xlwings_find_all(start_cell,end_cell,target_string):
     target_range = f'{start_cell}:{end_cell}'
     first_found = WorkSheet.range(target_range).api.Find(
         What=target_string,
@@ -34,5 +34,5 @@ app = xw.App(add_book = False,visible = True)
 WorkBook = app.books.open('test1.xlsx')
 WorkSheet = WorkBook.sheets['sheet1']
 # 测试代码
-result = find_all('G6','J8',1)
+result = xlwings_find_all('G6','J8',1)
 print(result[0].value)
