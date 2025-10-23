@@ -86,17 +86,6 @@ def create_chart_from_columns(excel_path, x_col, y_col, chart_type='column_clust
     wb.close()
     app.quit()
 
-
-
-    # 示例2：使用C列作为X轴（时间），D列作为Y轴（销售额），创建折线图
-    # 只需修改参数即可，非常灵活
-    # create_chart_from_columns(
-    #     excel_path=excel_file,
-    #     x_col='C',
-    #     y_col='D',
-    #     chart_type='line',  # 折线图
-    #     chart_title="销售额随时间变化趋势"
-    # )
 create_chart_from_columns(excel_path=r"C:\Users\48994\Desktop\M_time_movies.xlsx",
                           x_col='A', y_col='D', chart_type='column_clustered',
                           chart_title='电影评分')
