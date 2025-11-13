@@ -152,7 +152,6 @@ def AI_for_divide(latest_commend,history_records):
     response_of_examiner = get_answer(message_for_examiner)
     flag +=1
   return response_of_divider
-print(AI_for_divide('用黄色将excel中小明的成绩标亮，将边框格式改为虚线。隐藏小红所在列。隐藏A,B列',[]))
 # 编码需求AI
 # 接收经过分解的原子操作集，返回编码后的原子操作集
 # 两者都是字符串
