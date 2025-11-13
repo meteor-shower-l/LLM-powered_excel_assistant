@@ -71,7 +71,7 @@ class ExcelAutomation:
         else:
             print(f"未知操作类型")
 
-    def main(self, path, respond):
+    def backend_main(self, path, respond):
         self.open_excel(path)
         cmds_list = self.get_cmds(respond)
         # 遍历指令列表
@@ -401,7 +401,7 @@ if __name__ == "__main__":
     22,0,随意,B,A,1
     '''
     excel = ExcelAutomation()
-    excel.main(r"C:\Users\1\Desktop\参数.xlsx", respond)
+    excel.backend_main(r"C:\Users\1\Desktop\参数.xlsx", respond)
 
 
 
