@@ -15,8 +15,8 @@ class ExcelAutomation:
         self.workbook = self.app.books.open(path)
         self.worksheet = self.workbook.sheets[0]
 
-    def get_cmds(self, respond):
-        cmds_list = respondqu.strip().split(';')  # 分割指令
+    def get_cmds(self, response):
+        cmds_list = response.strip().split(';')  # 分割指令
         cmds_list = [
             [param.strip().strip("'") for param in cmd.split(',') if param.strip()]
             for cmd in cmds_list
@@ -25,8 +25,14 @@ class ExcelAutomation:
         print(cmds_list)
         return cmds_list
 
+
         # cmd 结构(handler_type,depend_id,ranges[],others)
 
+    def get_global_range(self):
+        abs_addr = self.worksheet.used_range
+        rel_addr = abs_addr.get_address(row_absolute=False, column_absolute=False)
+        print(rel_addr)
+        return rel_addr
     def handler(self, cmd):
         # 操作处理器字典
         handlers = {
@@ -48,26 +54,26 @@ class ExcelAutomation:
             '15': self.handle_text_italic,
             '16': self.handle_text_underline,
             '17': self.handle_text_strike,
-            '18': self.handle_function,
-            '19': self.handle_find,
-            '20': self.handle_sort,
-            '21': self.handle_autofilter,
-            '22': self.handle_disautofilter,
-            '23': self.handle_chart,
+            '18': self.handle_find,
+            '19': self.handle_sort,
+            '20': self.handle_autofilter,
+            '21': self.handle_deautofilter,
+            '22': self.handle_chart,
         }
         handler_type = cmd[0]
         if handler_type in handlers:
             # 遍历ranges调用相应操作
-            orign_ranges = cmd[2]
-            for range in orign_ranges:
-                cmd[2] = range
-                handlers[handler_type](cmd)
+            orign_ranges = cmd[2].strip().split('+')
+            for each_range in orign_ranges:
+                each_cmd = cmd.copy()
+                each_cmd[2] = each_range
+                handlers[handler_type](each_cmd)
         else:
             print(f"未知操作类型")
 
-    def main(self, path,respond):
+    def main(self, path, respond):
         self.open_excel(path)
-        self.get_cmds(respond)
+        cmds_list = self.get_cmds(respond)
         # 遍历指令列表
         for cmd in cmds_list:
             # cmd[1]=depend_id
@@ -78,7 +84,7 @@ class ExcelAutomation:
             else:
                 depend_id = int(cmd[1])
                 if depend_id < len(self.find_result_list):
-                    cmd[2] =  self.find_result_list[depend_id]  # 查找结果列表
+                    cmd[2] = self.find_result_list[depend_id]  # 查找结果列表
                     self.handler(cmd)
 
     # 读,others=none
@@ -147,12 +153,12 @@ class ExcelAutomation:
         target_cell = self.worksheet.range(cmd[2])
         target_cell.api.Borders(int(cmd[3])).LineStyle = int(cmd[4])
         target_cell.api.Borders(int(cmd[3])).Weight = int(cmd[5])
-        target_cell.api.Borders(int(cmd[3])).Color = self._parse_color(cmd[6])
+        target_cell.api.Borders(int(cmd[3])).Color = (cmd[6])
         time.sleep(self.T)
 
     # 改变单元格属性_颜色，others=[color]
     def handle_color(self, cmd):
-        self.worksheet.range(cmd[2]).color = self._parse_color(cmd[3])
+        self.worksheet.range(cmd[2]).color = (cmd[3])
         time.sleep(self.T)
 
     # 改变单元格属性_合并，others=none
@@ -186,22 +192,22 @@ class ExcelAutomation:
 
     # 改变单元格文本的字体颜色，others=[color]
     def handle_text_color(self, cmd):
-        self.worksheet.range(cmd[2]).font.color = self._parse_color(cmd[3])
+        self.worksheet.range(cmd[2]).font.color = cmd[3]
         time.sleep(self.T)
 
     # 改变单元格文本加粗，others=[is_bold]
     def handle_text_bold(self, cmd):
-        self.worksheet.range(cmd[2]).font.bold = cmd[3].lower() == 'true'
+        self.worksheet.range(cmd[2]).font.bold = cmd[3]
         time.sleep(self.T)
 
     # 改变单元格文本斜体，others=[is_italic]
     def handle_text_italic(self, cmd):
-        self.worksheet.range(cmd[2]).font.italic = cmd[3].lower() == 'true'
+        self.worksheet.range(cmd[2]).font.italic = cmd[3]
         time.sleep(self.T)
 
     # 改变单元格文本下划线，others=[underline_id]
     def handle_text_underline(self, cmd):
-        underline_type=[4,5,-4119]
+        underline_type=[4, 5, -4119]
         self.worksheet.range(cmd[2]).api.Font.Underline = underline_type[int(cmd[3])]
         time.sleep(self.T)
 
@@ -209,19 +215,17 @@ class ExcelAutomation:
 
     # 改变单元格文本删除线，others=[is_strike]
     def handle_text_strike(self, cmd):
-        self.worksheet.range(cmd[2]).api.Font.Strikethrough = cmd[3].lower() == 'true'
+        self.worksheet.range(cmd[2]).api.Font.Strikethrough = cmd[3]
         time.sleep(self.T)
 
-    # 调用内置函数，others=[function]
-    def handle_function(self, cmd):
-        self.worksheet.range(cmd[2]).formula = cmd[3]
-        time.sleep(self.T)
 
     # 查找，others=[target_string]
     def handle_find(self, cmd):
-        target_range = cmd[2]
+        if cmd[2]== '全局':
+            target_range=self.get_global_range()
+        else:
+            target_range = cmd[2]
         target_string = cmd[3]
-
         first_found = self.worksheet.range(target_range).api.Find(
             What=target_string,
             LookIn=xw.constants.FindLookIn.xlValues,
@@ -255,10 +259,9 @@ class ExcelAutomation:
     # 排序，others=[key_list[key,order]]
     def handle_sort(self, cmd):
         key_list = cmd[3].split('|')  # 假设key_list用|分隔
-        head = int(cmd[4])
-        orientation = int(cmd[5])
         key_number = len(key_list) // 2
-
+        if cmd[2]== '全局':
+            cmd[2]=self.get_global_range()
         if key_number == 1:
             self.worksheet.range(cmd[2]).api.Sort(
                 Key1=self.worksheet.range(key_list[0]).api,
@@ -284,13 +287,18 @@ class ExcelAutomation:
 
     # 筛选，others=[field,criteria]# 列号，条件
     def handle_autofilter(self, cmd):
+        if cmd[2]== '全局':
+            cmd[2]=self.get_global_range()
         field = int(cmd[3])
         criteria = cmd[4]
         self.worksheet.range(cmd[2]).api.AutoFilter(Field=field, Criteria1=criteria)
         time.sleep(self.T)
 
+
     # 取消筛选，others=none
-    def handle_disautofilter(self, cmd):
+    def handle_deautofilter(self, cmd):
+        if cmd[2]== '全局':
+            cmd[2]=self.get_global_range()
         if self.worksheet.api.AutoFilterMode:
             self.worksheet.api.AutoFilterMode = False
         time.sleep(self.T)
@@ -367,5 +375,33 @@ class ExcelAutomation:
 
 
 if __name__ == "__main__":
+    respond='''
+    0,0,A1+A6;
+    1,0,H1,1,无;
+    2,0,A1,0,10;
+    3,0,A1,0;
+    4,0,G3,0.0%;
+    5,0,A1,0,0;
+    6,0,A1,8,1,4, #FF0000;
+    7,0,A2,#FF0000;
+    8,0,B2:C2;
+    9,0,B1:C1;
+    10,0,B:B,1;
+    11,0,A1,黑体;
+    12,0,A1,20;
+    13,0,A1,#FF0000;
+    14,0,A1,1;
+    15,0,A1,1;
+    16,0,A1,1;
+    17,0,A1,1;
+    18,0,全局,排序;
+    19,0,全局,A1|2;
+    20,0,全局,1,>2024211938;
+    21,0,全局;
+    22,0,随意,B,A,1
+    '''
     excel = ExcelAutomation()
+    excel.main(r"C:\Users\1\Desktop\参数.xlsx", respond)
+
+
 

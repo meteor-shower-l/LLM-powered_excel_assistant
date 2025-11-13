@@ -37,7 +37,7 @@ targetcell.api.Borders(12).LineStyle = 2  # 内部水平边线，虚线
 targetcell.api.Borders(12).Color = rgb_to_int((255,0,0))
 time.sleep(2)
 
-# ​​边框索引​​:
+# 边框索引:
 # 5: 单元格从左上到右下的对角线
 # 6: 单元格从左下到右上的对角线
 # 7: 左边框
