@@ -42,23 +42,25 @@ class ExcelAutomation:
             '3': self.handle_autofit_axis_size,
             '4': self.handle_number_formate,
             '5': self.handle_alignment,
-            '6': self.handle_border,
-            '7': self.handle_color,
-            '8': self.handle_merge,
-            '9': self.handle_unmerge,
-            '10': self.handle_hide,
-            '11': self.handle_text_name,
-            '12': self.handle_text_size,
-            '13': self.handle_text_color,
-            '14': self.handle_text_bold,
-            '15': self.handle_text_italic,
-            '16': self.handle_text_underline,
-            '17': self.handle_text_strike,
-            '18': self.handle_find,
-            '19': self.handle_sort,
-            '20': self.handle_autofilter,
-            '21': self.handle_deautofilter,
-            '22': self.handle_chart,
+            '6': self.handle_border_linestyle,
+            '7': self.handle_border_weight,
+            '8': self.handle_border_color,
+            '9': self.handle_color,
+            '10': self.handle_merge,
+            '11': self.handle_unmerge,
+            '12': self.handle_hide,
+            '13': self.handle_text_name,
+            '14': self.handle_text_size,
+            '15': self.handle_text_color,
+            '16': self.handle_text_bold,
+            '17': self.handle_text_italic,
+            '18': self.handle_text_underline,
+            '19': self.handle_text_strike,
+            '20': self.handle_find,
+            '21': self.handle_sort,
+            '22': self.handle_autofilter,
+            '23': self.handle_deautofilter,
+            '24': self.handle_chart,
         }
         handler_type = cmd[0]
         if handler_type in handlers:
@@ -148,13 +150,27 @@ class ExcelAutomation:
             self.worksheet.range(cmd[2]).api.WrapText = True
         time.sleep(self.T)
 
-    # 改变单元格属性_边框，others=[line,linestyle,weight,color]
-    def handle_border(self, cmd):
+    # 改变单元格属性_边框线型，others=[linestyle]
+    def handle_border_linestyle(self, cmd):
         target_cell = self.worksheet.range(cmd[2])
-        target_cell.api.Borders(int(cmd[3])).LineStyle = int(cmd[4])
-        target_cell.api.Borders(int(cmd[3])).Weight = int(cmd[5])
-        target_cell.api.Borders(int(cmd[3])).Color = (cmd[6])
+        for line in range(7,11):
+           target_cell.api.Borders(line).LineStyle = int(cmd[4])
         time.sleep(self.T)
+
+    # 改变单元格属性_边框粗细，others=[weight]
+    def handle_border_weight(self, cmd):
+        target_cell = self.worksheet.range(cmd[2])
+        for line in range(7, 11):
+            target_cell.api.Borders(line).Weight = int(cmd[4])
+        time.sleep(self.T)
+
+    # 改变单元格属性_边框颜色，others=[color]
+    def handle_border_color(self, cmd):
+        target_cell = self.worksheet.range(cmd[2])
+        for line in range(7, 11):
+            target_cell.api.Borders(line).Color = int(cmd[4])
+        time.sleep(self.T)
+
 
     # 改变单元格属性_颜色，others=[color]
     def handle_color(self, cmd):
@@ -303,22 +319,21 @@ class ExcelAutomation:
             self.worksheet.api.AutoFilterMode = False
         time.sleep(self.T)
 
-    # 制图，others=[x_col, y_col, chart_type, data_start_row=2, chart_title]
+    # 制图，others=[x_col, y_col, chart_type, chart_title]
     def handle_chart(self, cmd):
         chart_type_list = ['column_clustered', 'line']
         x_col = cmd[3]
         y_col = cmd[4]
         chart_type_idx = int(cmd[5])
-        data_start_row = int(cmd[6]) if len(cmd) > 6 else 2
-        chart_title = cmd[7] if len(cmd) > 7 else None
+        chart_title = cmd[6] if len(cmd) > 6 else None
 
         # 获取X轴和Y轴的列标题（假设在第一行）
         x_title = self.worksheet.range(f'{x_col}1').value
         y_title = self.worksheet.range(f'{y_col}1').value
 
         # 读取X轴和Y轴的数据
-        x_data = self.worksheet.range(f'{x_col}{data_start_row}').expand('down').value
-        y_data = self.worksheet.range(f'{y_col}{data_start_row}').expand('down').value
+        x_data = self.worksheet.range(f'{x_col}{2}').expand('down').value
+        y_data = self.worksheet.range(f'{y_col}{2}').expand('down').value
 
         # 自动生成图表标题
         if chart_title is None:
@@ -382,23 +397,25 @@ if __name__ == "__main__":
     3,0,A1,0;
     4,0,G3,0.0%;
     5,0,A1,0,0;
-    6,0,A1,8,1,4, #FF0000;
-    7,0,A2,#FF0000;
-    8,0,B2:C2;
-    9,0,B1:C1;
-    10,0,B:B,1;
-    11,0,A1,黑体;
-    12,0,A1,20;
-    13,0,A1,#FF0000;
-    14,0,A1,1;
-    15,0,A1,1;
+    6,0,A1,1
+    7,0,A1,4
+    8,0,A1,#FF0000;
+    9,0,A2,#FF0000;
+    10,0,B2:C2;
+    11,0,B1:C1;
+    12,0,B:B,1;
+    13,0,A1,黑体;
+    14,0,A1,20;
+    15,0,A1,#FF0000;
     16,0,A1,1;
     17,0,A1,1;
-    18,0,全局,排序;
-    19,0,全局,A1|2;
-    20,0,全局,1,>2024211938;
-    21,0,全局;
-    22,0,随意,B,A,1
+    18,0,A1,1;
+    19,0,A1,1;
+    20,0,全局,排序;
+    21,0,全局,A1|2;
+    22,0,全局,1,>2024211938;
+    23,0,全局;
+    24,0,随意,B,A,
     '''
     excel = ExcelAutomation()
     excel.backend_main(r"C:\Users\1\Desktop\参数.xlsx", respond)
