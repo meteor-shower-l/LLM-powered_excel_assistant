@@ -418,7 +418,7 @@ if __name__ == "__main__":
     24,0,随意,B,A,
     '''
     excel = ExcelAutomation()
-    excel.backend_main(r"C:\Users\1\Desktop\参数.xlsx", respond)
+    excel.backend_main(r"C:\Users\48994\Desktop\test2.xlsx","20,0,0,刘;9,1,A1,#FFFF00")
 
 
 

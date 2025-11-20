@@ -1,6 +1,6 @@
 import requests
 url = 'https://spark-api-open.xf-yun.com/v1/chat/completions'
-api_key ='Bearer '
+api_key ='Bearer OataHkQJLFHwMVXzAxkC:nhkJFGiLNxpRmwCwRDQP'
 
 PROMPT_AI_FOR_DIVIDE_DIVIDER = """
 ## 角色
@@ -537,10 +537,10 @@ def AI_for_coding(commend):
   response_of_examiner = ''
   flag = 0
   while ('1' not in response_of_examiner) and (flag <=3):
-    message_for_divider = (PROMPT_AI_FOR_DIVIDE_DIVIDER
+    message_for_divider = (PROMPT_AI_FOR_CODE_CODER
     +f'请将经过分解的需求{commend}进行编码')
     response_of_coder = get_answer(message_for_divider)
-    message_for_examiner = (PROMPT_AI_FOR_DIVIDE_EXAMINER
+    message_for_examiner = (PROMPT_AI_FOR_CODE_EXAMINER
     +f'经过分解的原子需求为{commend},编码器所得结果为{response_of_coder}'
     +'一定要注意你只需要输出0或1,1代表编码无误，0代表编码错误'
     )
