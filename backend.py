@@ -100,8 +100,8 @@ class ExcelAutomation:
         handler_type = cmd[0]
         # cmd[1]=depend_id
         # 若依赖于查找结果，则cmd[2]=range1改变为对应的查找结果
-        if cmd[1] != '0' and cmd[1] < len(self.find_result_list):
-            cmd[2] = self.find_result_list[cmd[1]]  # 查找结果列表
+        if cmd[1] != '0' :
+            cmd[2] = self.find_result_list[int(cmd[1])-1]  # 查找结果列表
         if cmd[2] == '0':
             cmd[2]= self.get_global_range()
         if handler_type in handlers:
@@ -326,24 +326,31 @@ class ExcelAutomation:
 
         # 排序，others=[key_list[key,order]]
 
-        # 排序，others=[key_list[key,order]]
-
     def handle_sort(self, cmd):
-        key_list = cmd[3]
-        print(key_list[0])
+
+        sort_list = cmd[3]
+        key = f'{sort_list[0]}2'
+        print(key)
+        order = int(sort_list[1]) + 1
         self.worksheet.range(cmd[2]).api.Sort(
-                Key1=self.worksheet.range(key_list[0]).api,
-                Order1=int(key_list[1])+1,)
+            Key1=self.worksheet.range(key).api,
+            Order1=order,
+            Header=0,
+            Orientation=1)
 
         time.sleep(self.T)
 
-    # 筛选，others=[field,criteria]# 列号，条件
+        # 筛选，others=[field,criteria]# 列号，条件
+
     def handle_autofilter(self, cmd):
-        field = int(cmd[3])
+        field_cell = self.worksheet.range(f'{cmd[3]}1')
+        field_index = field_cell.column
+        print(field_index)
+        if cmd[2] == '0':
+            cmd[2] = self.get_global_range()
         criteria = cmd[4]
-        self.worksheet.range(cmd[2]).api.AutoFilter(Field=field, Criteria1=criteria)
+        self.worksheet.range(cmd[2]).api.AutoFilter(Field=field_index, Criteria1=criteria)
         time.sleep(self.T)
-
 
     # 取消筛选，others=none
     def handle_deautofilter(self, cmd):
@@ -412,51 +419,19 @@ class ExcelAutomation:
         """设置操作时间间隔"""
         self.T = interval
 
-    def close(self):
-        """关闭Excel应用"""
-        if self.workbook:
-            # self.workbook.save()
-            self.workbook.close()
-        if self.app:
-            self.app.quit()
+    # def close(self):
+    #     """关闭Excel应用"""
+    #     if self.workbook:
+    #         # self.workbook.save()
+    #         self.workbook.close()
+    #     if self.app:
+    #         pass
+    #         self.app.quit()
 
 
 if __name__ == "__main__":
     response='''
-    0,0,A1+A6;
-    1,0,H1:G1,0,吕布+董卓;
-    1,0,H2:H3,1,刘备+貂蝉;
-    1,0,H5:G6,2,曹操+曹仁+曹真+曹爽;
-    2,0,A1:A2,0,10;
-    2,0,A1:B1,1,10;
-    3,0,A1:A2,0;
-    3,0,A1:B1,1;
-    3,0,A1:C5,2;
-    4,0,G3,0.0%;
-    4,0,G3,0.00;
-    5,0,A1,0,2;
-    5,0,A2,1,3;
-    5,0,A1,2;
-    6,0,A1,1;
-    7,0,A1,4;
-    8,0,A1,#FF0000;
-    9,0,A2,#FF0000;
-    10,0,B2:C2;
-    11,0,B1:C1;
-    12,0,A1,0;
-    12,0,B2,1;
-    13,0,A1,黑体;
-    14,0,A1,20;
-    15,0,A1,#FF0000;
-    16,0,A1,1;
-    17,0,A1,1;
-    18,0,A1,1;
-    19,0,A1,1;
-    20,0,0,文本;
-    21,0,0,A+0;
-    22,0,0,1,>2024211938;
-    23,0,0;
-    24,0,0,B,A,0;
+    21,0,0,A1+1;
     '''
     excel = ExcelAutomation()
     excel.backend_main(r"C:\Users\1\Desktop\学业奖学金公示名单.xlsx", response)
