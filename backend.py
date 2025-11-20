@@ -14,25 +14,60 @@ class ExcelAutomation:
         self.app = xw.App(add_book=False, visible=True)
         self.workbook = self.app.books.open(path)
         self.worksheet = self.workbook.sheets[0]
+    # 分割指令
+    def get_cmds(self, cmd_response):
 
-    def get_cmds(self, response):
-        cmds_list = response.strip().split(';')  # 分割指令
-        cmds_list = [
-            [param.strip().strip("'") for param in cmd.split(',') if param.strip()]
-            for cmd in cmds_list
-            if cmd.strip()
+        # 按顺序分割：先分号，再逗号，最后加号
+        cmds = [
+        [
+            [sub_item.strip() for sub_item in field.split('+') if sub_item.strip()]
+            if '+' in field else field
+            for field in [f.strip() for f in record.split(',') if f.strip()]
         ]
-        print(cmds_list)
-        return cmds_list
-
-
+         for record in [r.strip() for r in cmd_response.split(';') if r.strip()]
+        ]
+        print(cmds)
+        return cmds
         # cmd 结构(handler_type,depend_id,ranges[],others)
 
+    # 得到所有数据的总范围
     def get_global_range(self):
         abs_addr = self.worksheet.used_range
         rel_addr = abs_addr.get_address(row_absolute=False, column_absolute=False)
         print(rel_addr)
         return rel_addr
+
+    # 异常函数
+    def catch_ex(self,handler_type):
+        handlers_cn = {
+            '0': '读取单元格内容',
+            '1': '写入数据',
+            '2': '调整行列尺寸',
+            '3': '调整适当的行列尺寸',
+            '4': '设置数字格式',
+            '5': '设置对齐方式',
+            '6': '设置边框线型',
+            '7': '设置边框粗细',
+            '8': '设置边框颜色',
+            '9': '设置单元格颜色',
+            '10': '合并单元格',
+            '11': '取消合并单元格',
+            '12': '隐藏行列',
+            '13': '设置字体名称',
+            '14': '设置字体大小',
+            '15': '设置字体颜色',
+            '16': '设置文字加粗',
+            '17': '设置文字斜体',
+            '18': '设置下划线',
+            '19': '设置删除线',
+            '20': '查找内容',
+            '21': '数据排序',
+            '22': '自动筛选',
+            '23': '取消筛选',
+            '24': '创建图表'
+        }
+        print(f'{handlers_cn[handler_type]}错误')
+
     def handler(self, cmd):
         # 操作处理器字典
         handlers = {
@@ -63,13 +98,25 @@ class ExcelAutomation:
             '24': self.handle_chart,
         }
         handler_type = cmd[0]
+        # cmd[1]=depend_id
+        # 若依赖于查找结果，则cmd[2]=range1改变为对应的查找结果
+        if cmd[1] != '0' and cmd[1] < len(self.find_result_list):
+            cmd[2] = self.find_result_list[cmd[1]]  # 查找结果列表
+        if cmd[2] == '0':
+            cmd[2]= self.get_global_range()
         if handler_type in handlers:
             # 遍历ranges调用相应操作
-            orign_ranges = cmd[2].strip().split('+')
+            orign_ranges = cmd[2]
+            if type(orign_ranges) != list:
+                orign_ranges = [orign_ranges]
             for each_range in orign_ranges:
                 each_cmd = cmd.copy()
                 each_cmd[2] = each_range
-                handlers[handler_type](each_cmd)
+                try:
+                   handlers[handler_type](each_cmd)
+                except:
+                   self.catch_ex(handler_type)
+
         else:
             print(f"未知操作类型")
 
@@ -78,16 +125,8 @@ class ExcelAutomation:
         cmds_list = self.get_cmds(respond)
         # 遍历指令列表
         for cmd in cmds_list:
-            # cmd[1]=depend_id
-            # 若不依赖于任何查找结果，则操作区域无需改变
-            if cmd[1] == '0':
-                self.handler(cmd)
-            # 若依赖于查找结果，则cmd[2]=range1改变为对应的查找结果
-            else:
-                depend_id = int(cmd[1])
-                if depend_id < len(self.find_result_list):
-                    cmd[2] = self.find_result_list[depend_id]  # 查找结果列表
-                    self.handler(cmd)
+            self.handler(cmd)
+        self.close()
 
     # 读,others=none
     def handle_read(self, cmd):
@@ -95,11 +134,13 @@ class ExcelAutomation:
 
     # 写,others=[axis,value]
     def handle_write(self, cmd):
-        # cmd[3]=axis,axis=0,写入行或方格；axis=1,写入列
-        if cmd[3] == '0':
+        # cmd[3]=axis,axis=0,写入行；axis=1,写入列;axis=2,写入方格
+        if cmd[3] == 0:
             self.worksheet.range(cmd[2]).value = cmd[4]
         elif cmd[3] == '1':
             self.worksheet.range(cmd[2]).options(transpose=True).value = cmd[4]
+        elif cmd[3] == '2':
+            self.worksheet.range(cmd[2]).value = cmd[4]
         time.sleep(self.T)
 
     # 改变单元格属性_行高列宽，others=[axis,value]
@@ -153,22 +194,36 @@ class ExcelAutomation:
     # 改变单元格属性_边框线型，others=[linestyle]
     def handle_border_linestyle(self, cmd):
         target_cell = self.worksheet.range(cmd[2])
-        for line in range(7,11):
-           target_cell.api.Borders(line).LineStyle = int(cmd[4])
+        if cmd[3] == '6':
+            cmd[3] = -4142
+        for line in range(7, 11):
+            target_cell.api.Borders(line).LineStyle = int(cmd[3])
         time.sleep(self.T)
 
     # 改变单元格属性_边框粗细，others=[weight]
     def handle_border_weight(self, cmd):
         target_cell = self.worksheet.range(cmd[2])
         for line in range(7, 11):
-            target_cell.api.Borders(line).Weight = int(cmd[4])
+            target_cell.api.Borders(line).Weight = int(cmd[3])
         time.sleep(self.T)
 
-    # 改变单元格属性_边框颜色，others=[color]
+    def hex_color_to_int(self, hex_color):
+
+        hex_color = hex_color.lstrip('#').upper()
+
+        red = int(hex_color[0:2], 16)
+        green = int(hex_color[2:4], 16)
+        blue = int(hex_color[4:6], 16)
+        color_int = (red << 16) | (green << 8) | blue
+        return color_int
+        # 改变单元格属性_边框颜色，others=[color]
+
     def handle_border_color(self, cmd):
         target_cell = self.worksheet.range(cmd[2])
+        color = self.hex_color_to_int(cmd[3])
         for line in range(7, 11):
-            target_cell.api.Borders(line).Color = int(cmd[4])
+            target_cell.api.Borders(line).Color = color
+
         time.sleep(self.T)
 
 
@@ -235,12 +290,9 @@ class ExcelAutomation:
         time.sleep(self.T)
 
 
-    # 查找，others=[target_string]
+    # 查找,others=[target_string]
     def handle_find(self, cmd):
-        if cmd[2]== '全局':
-            target_range=self.get_global_range()
-        else:
-            target_range = cmd[2]
+        target_range = cmd[2]
         target_string = cmd[3]
         first_found = self.worksheet.range(target_range).api.Find(
             What=target_string,
@@ -272,39 +324,21 @@ class ExcelAutomation:
         self.find_result_list.append(found_addresses)
         time.sleep(self.T)
 
-    # 排序，others=[key_list[key,order]]
+        # 排序，others=[key_list[key,order]]
+
+        # 排序，others=[key_list[key,order]]
+
     def handle_sort(self, cmd):
-        key_list = cmd[3].split('|')  # 假设key_list用|分隔
-        key_number = len(key_list) // 2
-        if cmd[2]== '全局':
-            cmd[2]=self.get_global_range()
-        if key_number == 1:
-            self.worksheet.range(cmd[2]).api.Sort(
+        key_list = cmd[3]
+        print(key_list[0])
+        self.worksheet.range(cmd[2]).api.Sort(
                 Key1=self.worksheet.range(key_list[0]).api,
-                Order1=int(key_list[1]),
-            )
-        elif key_number == 2:
-            self.worksheet.range(cmd[2]).api.Sort(
-                Key1=self.worksheet.range(key_list[0]).api,
-                Order1=int(key_list[1]),
-                Key2=self.worksheet.range(key_list[2]).api,
-                Order2=int(key_list[3]),
-            )
-        elif key_number == 3:
-            self.worksheet.range(cmd[2]).api.Sort(
-                Key1=self.worksheet.range(key_list[0]).api,
-                Order1=int(key_list[1]),
-                Key2=self.worksheet.range(key_list[2]).api,
-                Order2=int(key_list[3]),
-                Key3=self.worksheet.range(key_list[4]).api,
-                Order3=int(key_list[5]),
-            )
+                Order1=int(key_list[1])+1,)
+
         time.sleep(self.T)
 
     # 筛选，others=[field,criteria]# 列号，条件
     def handle_autofilter(self, cmd):
-        if cmd[2]== '全局':
-            cmd[2]=self.get_global_range()
         field = int(cmd[3])
         criteria = cmd[4]
         self.worksheet.range(cmd[2]).api.AutoFilter(Field=field, Criteria1=criteria)
@@ -313,8 +347,6 @@ class ExcelAutomation:
 
     # 取消筛选，others=none
     def handle_deautofilter(self, cmd):
-        if cmd[2]== '全局':
-            cmd[2]=self.get_global_range()
         if self.worksheet.api.AutoFilterMode:
             self.worksheet.api.AutoFilterMode = False
         time.sleep(self.T)
@@ -372,7 +404,6 @@ class ExcelAutomation:
         chart.api[1].Axes(2).HasTitle = True
         chart.api[1].Axes(2).AxisTitle.Text = y_title
 
-        self.workbook.save()
         print(f"图表已成功创建！图表标题：'{chart_title}'")
         time.sleep(2 * self.T)
 
@@ -384,26 +415,36 @@ class ExcelAutomation:
     def close(self):
         """关闭Excel应用"""
         if self.workbook:
+            # self.workbook.save()
             self.workbook.close()
         if self.app:
             self.app.quit()
 
 
 if __name__ == "__main__":
-    respond='''
+    response='''
     0,0,A1+A6;
-    1,0,H1,1,无;
-    2,0,A1,0,10;
-    3,0,A1,0;
+    1,0,H1:G1,0,吕布+董卓;
+    1,0,H2:H3,1,刘备+貂蝉;
+    1,0,H5:G6,2,曹操+曹仁+曹真+曹爽;
+    2,0,A1:A2,0,10;
+    2,0,A1:B1,1,10;
+    3,0,A1:A2,0;
+    3,0,A1:B1,1;
+    3,0,A1:C5,2;
     4,0,G3,0.0%;
-    5,0,A1,0,0;
-    6,0,A1,1
-    7,0,A1,4
+    4,0,G3,0.00;
+    5,0,A1,0,2;
+    5,0,A2,1,3;
+    5,0,A1,2;
+    6,0,A1,1;
+    7,0,A1,4;
     8,0,A1,#FF0000;
     9,0,A2,#FF0000;
     10,0,B2:C2;
     11,0,B1:C1;
-    12,0,B:B,1;
+    12,0,A1,0;
+    12,0,B2,1;
     13,0,A1,黑体;
     14,0,A1,20;
     15,0,A1,#FF0000;
@@ -411,14 +452,14 @@ if __name__ == "__main__":
     17,0,A1,1;
     18,0,A1,1;
     19,0,A1,1;
-    20,0,全局,排序;
-    21,0,全局,A1|2;
-    22,0,全局,1,>2024211938;
-    23,0,全局;
-    24,0,随意,B,A,
+    20,0,0,文本;
+    21,0,0,A+0;
+    22,0,0,1,>2024211938;
+    23,0,0;
+    24,0,0,B,A,0;
     '''
     excel = ExcelAutomation()
-    excel.backend_main(r"C:\Users\1\Desktop\参数.xlsx", respond)
+    excel.backend_main(r"C:\Users\1\Desktop\学业奖学金公示名单.xlsx", response)
 
 
 
