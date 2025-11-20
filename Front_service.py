@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import os
 
+
 class ExcelOperationGUI:
     def __init__(self, root):
         self.root = root
@@ -191,7 +192,7 @@ class ExcelOperationGUI:
         if user_confirm:
             # 6. 执行编码和后端操作
             self.flag = True
-            messagebox.showinfo("提示", "开始执行Excel操作，请稍候...")
+            messagebox.showinfo("提示", "请点击确定以执行下一步操作！")
 
             try:
                 encoded_commend = AI_for_coding(ai_divide)
