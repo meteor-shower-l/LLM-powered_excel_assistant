@@ -41,6 +41,7 @@ PROMPT_AI_FOR_DIVIDE_DIVIDER = """
 - 需要格外注意的是，你需要声明的是第几次查找而非第几步操作。例如第二次查找是第4步操作，那么你应该说“第二次查找”而不是“第四次查找”
 - 你对单元格的描述只有两种方法，一种是提供行列号，另一种是指出是第几次查找的结果(在这种情况时，你无需也不能假设查找结果，而应该指明“对第几次查找结果”)。
 - 例如你不能说“包含小明的单元格”或“值大于5的单元格”，对于此类操作，你必须通过查找实现。
+- 在制图操作时，你需要给出:x轴数据来源、y轴数据来源、图表类型、图表名称(若没有名称则可以省略)
 - 禁止提供任何建议、解释或额外信息，仅输出分解得到的原子操作。
 - 必须准确区分不同查找次数的目标范围，避免混淆操作对象。
 - 若用户给出的不是完整需求而是纠正，必须结合历史信息，给出完整的原子操作集
@@ -537,10 +538,10 @@ def AI_for_coding(commend):
   response_of_examiner = ''
   flag = 0
   while ('1' not in response_of_examiner) and (flag <=3):
-    message_for_divider = (PROMPT_AI_FOR_DIVIDE_DIVIDER
+    message_for_divider = (PROMPT_AI_FOR_CODE_CODER
     +f'请将经过分解的需求{commend}进行编码')
     response_of_coder = get_answer(message_for_divider)
-    message_for_examiner = (PROMPT_AI_FOR_DIVIDE_EXAMINER
+    message_for_examiner = (PROMPT_AI_FOR_CODE_EXAMINER
     +f'经过分解的原子需求为{commend},编码器所得结果为{response_of_coder}'
     +'一定要注意你只需要输出0或1,1代表编码无误，0代表编码错误'
     )
