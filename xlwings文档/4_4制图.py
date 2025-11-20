@@ -88,4 +88,5 @@ def create_chart_from_columns(excel_path, x_col, y_col, chart_type='column_clust
 
 create_chart_from_columns(excel_path=r"C:\Users\48994\Desktop\M_time_movies.xlsx",
                           x_col='A', y_col='D', chart_type='column_clustered',
+                          sheet_name="M_time_movies",
                           chart_title='电影评分')

@@ -1,5 +1,5 @@
-from backed_service import Backed_service
-from ai_service import AI_for_divide, AI_for_coding
+from backend import ExcelAutomation
+from AI_service import AI_for_divide, AI_for_coding
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import os
@@ -171,6 +171,7 @@ class ExcelOperationGUI:
         # 4. 调用AI分解需求
         try:
             ai_divide = AI_for_divide(latest_commend, self.history_records)
+            print(ai_divide)
         except Exception as e:
             messagebox.showerror("错误", f"AI分解异常：{str(e)}")
             return
@@ -194,6 +195,7 @@ class ExcelOperationGUI:
 
             try:
                 encoded_commend = AI_for_coding(ai_divide)
+                print(encoded_commend)
             except Exception as e:
                 messagebox.showerror("错误", f"AI编码异常：{str(e)}")
                 self.flag = False
@@ -206,7 +208,7 @@ class ExcelOperationGUI:
                 return
 
             try:
-                backend_result = Backed_service(self.file_path, encoded_commend)
+                backend_result = ExcelAutomation.backend_main(self.file_path, encoded_commend)
                 messagebox.showinfo(
                     "Excel操作成功",
                     f"Excel操作执行完成！\n\n后端返回结果：\n{backend_result}"
