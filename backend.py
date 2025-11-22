@@ -419,19 +419,19 @@ class ExcelAutomation:
         """设置操作时间间隔"""
         self.T = interval
 
-    # def close(self):
-    #     """关闭Excel应用"""
-    #     if self.workbook:
-    #         # self.workbook.save()
-    #         self.workbook.close()
-    #     if self.app:
-    #         pass
-    #         self.app.quit()
+    def close(self):
+        """关闭Excel应用"""
+        if self.workbook:
+            self.workbook.save()
+            self.workbook.close()
+        if self.app:
+            pass
+            self.app.quit()
 
 
 if __name__ == "__main__":
     response='''
-    21,0,0,A1+1;
+    20,0,0,刘;9,1,A1,#FFFF00
     '''
     excel = ExcelAutomation()
     excel.backend_main(r"C:\Users\1\Desktop\学业奖学金公示名单.xlsx", response)
