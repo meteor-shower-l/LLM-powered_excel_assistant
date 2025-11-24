@@ -9,6 +9,7 @@ class ExcelAutomation:
         self.worksheet = None
         self.find_result_list = []  # 查找结果列表
         self.T = 1
+        self.error_list=[]
 
     def open_excel(self, path):
         self.app = xw.App(add_book=False, visible=True)
@@ -60,13 +61,13 @@ class ExcelAutomation:
             '17': '设置文字斜体',
             '18': '设置下划线',
             '19': '设置删除线',
-            '20': '查找内容',
+            '20': '查找',
             '21': '数据排序',
             '22': '自动筛选',
             '23': '取消筛选',
             '24': '创建图表'
         }
-        print(f'{handlers_cn[handler_type]}错误')
+        return f'{handlers_cn[handler_type]}错误'
 
     def handler(self, cmd):
         # 操作处理器字典
@@ -97,36 +98,41 @@ class ExcelAutomation:
             '23': self.handle_deautofilter,
             '24': self.handle_chart,
         }
-        handler_type = cmd[0]
-        # cmd[1]=depend_id
-        # 若依赖于查找结果，则cmd[2]=range1改变为对应的查找结果
-        if cmd[1] != '0' :
-            cmd[2] = self.find_result_list[int(cmd[1])-1]  # 查找结果列表
-        if cmd[2] == '0':
-            cmd[2]= self.get_global_range()
-        if handler_type in handlers:
-            # 遍历ranges调用相应操作
-            orign_ranges = cmd[2]
-            if type(orign_ranges) != list:
-                orign_ranges = [orign_ranges]
-            for each_range in orign_ranges:
-                each_cmd = cmd.copy()
-                each_cmd[2] = each_range
-                try:
-                   handlers[handler_type](each_cmd)
-                except:
-                   self.catch_ex(handler_type)
 
+        handler_type = cmd[0]
+        if len(cmd) <3:
+            self.error_list.append(self.catch_ex(handler_type))
         else:
-            print(f"未知操作类型")
+            # cmd[1]=depend_id
+            # 若依赖于查找结果，则cmd[2]=range1改变为对应的查找结果
+            if cmd[1] != '0' :
+                cmd[2] = self.find_result_list[int(cmd[1])-1]  # 查找结果列表
+            if cmd[2] == '0':
+                cmd[2]= self.get_global_range()
+            if handler_type in handlers:
+                # 遍历ranges调用相应操作
+                orign_ranges = cmd[2]
+                if type(orign_ranges) != list:
+                    orign_ranges = [orign_ranges]
+                for each_range in orign_ranges:
+                    each_cmd = cmd.copy()
+                    each_cmd[2] = each_range
+                    try:
+                       handlers[handler_type](each_cmd)
+                    except:
+                        self.error_list.append(self.catch_ex(handler_type))
+            else:
+               self.error_list .append(f"未知操作类型")
 
     def backend_main(self, path, respond):
         self.open_excel(path)
+        self.save_as()
         cmds_list = self.get_cmds(respond)
         # 遍历指令列表
         for cmd in cmds_list:
             self.handler(cmd)
         self.close()
+
 
     # 读,others=none
     def handle_read(self, cmd):
@@ -418,6 +424,9 @@ class ExcelAutomation:
     def set_time_interval(self, interval):
         """设置操作时间间隔"""
         self.T = interval
+    def  get_error(self):
+        pass
+        return self.error_list
 
     def close(self):
         """关闭Excel应用"""
@@ -427,14 +436,18 @@ class ExcelAutomation:
         if self.app:
             pass
             self.app.quit()
+    def save_as(self):
+        self.workbook.save(r'备份.xlsx')
 
 
 if __name__ == "__main__":
     response='''
-    20,0,0,刘;9,1,A1,#FFFF00
+    0,0,A1;10,0;100,0,0
     '''
     excel = ExcelAutomation()
     excel.backend_main(r"C:\Users\1\Desktop\学业奖学金公示名单.xlsx", response)
+    print(excel.get_error())
+
 
 
 
