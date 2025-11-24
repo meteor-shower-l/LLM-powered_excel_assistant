@@ -503,7 +503,7 @@ def get_answer(message):
             }
         ]
     }
-    response = requests.post(url=url,json= body,headers= headers)
+    response = requests.post(url=url,json = body,headers= headers)
     if('error' in response.json()):
         return "运行错误"
     else:
@@ -518,11 +518,15 @@ def AI_for_divide(latest_commend,history_records):
   response_of_examiner = ''
   flag = 0
   while ('1' not in response_of_examiner) and (flag <=3):
+
     history_records_str = integrate_history_records(history_records)
     message_for_divider = (PROMPT_AI_FOR_DIVIDE_DIVIDER
     +f'请将用户的需求{latest_commend}分解为各个原子操作的组合，'
-    +'以下是历史对话:\n请结合历史对话进行分解'+history_records_str)
+    +'以下是历史对话:\n请结合历史对话进行分解'+history_records_str
+    )
+
     response_of_divider = get_answer(message_for_divider)
+
     message_for_examiner = (PROMPT_AI_FOR_DIVIDE_EXAMINER
     +f'用户需求为{latest_commend},分解器所得结果为{response_of_divider}'
     +'以下是历史对话:\n请结合历史对话进行审核'+history_records_str
@@ -539,8 +543,11 @@ def AI_for_coding(commend):
   flag = 0
   while ('1' not in response_of_examiner) and (flag <=3):
     message_for_divider = (PROMPT_AI_FOR_CODE_CODER
-    +f'请将经过分解的需求{commend}进行编码')
+    +f'请将经过分解的需求{commend}进行编码'
+    )
+    
     response_of_coder = get_answer(message_for_divider)
+
     message_for_examiner = (PROMPT_AI_FOR_CODE_EXAMINER
     +f'经过分解的原子需求为{commend},编码器所得结果为{response_of_coder}'
     +'一定要注意你只需要输出0或1,1代表编码无误，0代表编码错误'
