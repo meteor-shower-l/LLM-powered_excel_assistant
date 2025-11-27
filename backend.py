@@ -15,10 +15,15 @@ class ExcelAutomation:
         self.app = xw.App(add_book=False, visible=True)
         self.workbook = self.app.books.open(path)
         self.worksheet = self.workbook.sheets[0]
-        time.sleep(5)
+        time.sleep(3)
 
-    def save_as(self):
+    def save_as(self,path):
+        self.app = xw.App(add_book=False, visible=False)
+        self.workbook = self.app.books.open(path)
+        self.worksheet = self.workbook.sheets[0]
         self.workbook.save(r'备份.xlsx')
+        self.workbook.close()
+        self.app.quit()
 
     def close(self):
         """关闭Excel应用"""
@@ -31,8 +36,8 @@ class ExcelAutomation:
 
 
     def backend_main(self, path, respond):
+        self.save_as(path)
         self.open_excel(path)
-        self.save_as()
         cmds_list = self.get_cmds(respond)
         # 遍历指令列表
         for cmd in cmds_list:
@@ -108,7 +113,7 @@ class ExcelAutomation:
                     except:
                         self.error_list.append(self.catch_ex(handler_type))
             else:
-               self.error_list .append(f"未知操作类型")
+               self.error_list.append(f"未知操作类型")
 
 
     def set_time_interval(self, interval):
@@ -146,10 +151,12 @@ class ExcelAutomation:
         }
         return f'{handlers_cn[handler_type]}错误'
 
-    # 返回错误列表
-    def get_error(self):
-        pass
-        return self.error_list
+    # 返回结果
+    def get_result(self):
+        if self.error_list:
+            return self.error_list
+        else:
+            return('success')
 
 
     # 得到所有数据的总范围
@@ -158,8 +165,6 @@ class ExcelAutomation:
         rel_addr = abs_addr.get_address(row_absolute=False, column_absolute=False)
         print(rel_addr)
         return rel_addr
-
-
 
 
 
@@ -457,11 +462,11 @@ class ExcelAutomation:
 
 if __name__ == "__main__":
     response='''
-    0,0,A1;10,0;100,0,0
+    1,0,A4,测试,67,VREN1;5
     '''
     excel = ExcelAutomation()
     excel.backend_main(r"C:\Users\1\Desktop\学业奖学金公示名单.xlsx", response)
-    print(excel.get_error())
+    print(excel.get_result())
 
 
 
