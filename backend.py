@@ -15,59 +15,45 @@ class ExcelAutomation:
         self.app = xw.App(add_book=False, visible=True)
         self.workbook = self.app.books.open(path)
         self.worksheet = self.workbook.sheets[0]
+        time.sleep(5)
+
+    def save_as(self):
+        self.workbook.save(r'备份.xlsx')
+
+    def close(self):
+        """关闭Excel应用"""
+        if self.workbook:
+            self.workbook.save()
+            self.workbook.close()
+        if self.app:
+            pass
+            self.app.quit()
+
+
+    def backend_main(self, path, respond):
+        self.open_excel(path)
+        self.save_as()
+        cmds_list = self.get_cmds(respond)
+        # 遍历指令列表
+        for cmd in cmds_list:
+            self.handler(cmd)
+        self.close()
+
     # 分割指令
     def get_cmds(self, cmd_response):
 
         # 按顺序分割：先分号，再逗号，最后加号
         cmds = [
-        [
-            [sub_item.strip() for sub_item in field.split('+') if sub_item.strip()]
-            if '+' in field else field
-            for field in [f.strip() for f in record.split(',') if f.strip()]
-        ]
-         for record in [r.strip() for r in cmd_response.split(';') if r.strip()]
+            [
+                [sub_item.strip() for sub_item in field.split('+') if sub_item.strip()]
+                if '+' in field else field
+                for field in [f.strip() for f in record.split(',') if f.strip()]
+            ]
+            for record in [r.strip() for r in cmd_response.split(';') if r.strip()]
         ]
         print(cmds)
         return cmds
         # cmd 结构(handler_type,depend_id,ranges[],others)
-
-    # 得到所有数据的总范围
-    def get_global_range(self):
-        abs_addr = self.worksheet.used_range
-        rel_addr = abs_addr.get_address(row_absolute=False, column_absolute=False)
-        print(rel_addr)
-        return rel_addr
-
-    # 异常函数
-    def catch_ex(self,handler_type):
-        handlers_cn = {
-            '0': '读取单元格内容',
-            '1': '写入数据',
-            '2': '调整行列尺寸',
-            '3': '调整适当的行列尺寸',
-            '4': '设置数字格式',
-            '5': '设置对齐方式',
-            '6': '设置边框线型',
-            '7': '设置边框粗细',
-            '8': '设置边框颜色',
-            '9': '设置单元格颜色',
-            '10': '合并单元格',
-            '11': '取消合并单元格',
-            '12': '隐藏行列',
-            '13': '设置字体名称',
-            '14': '设置字体大小',
-            '15': '设置字体颜色',
-            '16': '设置文字加粗',
-            '17': '设置文字斜体',
-            '18': '设置下划线',
-            '19': '设置删除线',
-            '20': '查找',
-            '21': '数据排序',
-            '22': '自动筛选',
-            '23': '取消筛选',
-            '24': '创建图表'
-        }
-        return f'{handlers_cn[handler_type]}错误'
 
     def handler(self, cmd):
         # 操作处理器字典
@@ -105,7 +91,7 @@ class ExcelAutomation:
         else:
             # cmd[1]=depend_id
             # 若依赖于查找结果，则cmd[2]=range1改变为对应的查找结果
-            if cmd[1] != '0' :
+            if cmd[1] != '0':
                 cmd[2] = self.find_result_list[int(cmd[1])-1]  # 查找结果列表
             if cmd[2] == '0':
                 cmd[2]= self.get_global_range()
@@ -124,15 +110,69 @@ class ExcelAutomation:
             else:
                self.error_list .append(f"未知操作类型")
 
-    def backend_main(self, path, respond):
-        self.open_excel(path)
-        self.save_as()
-        cmds_list = self.get_cmds(respond)
-        # 遍历指令列表
-        for cmd in cmds_list:
-            self.handler(cmd)
-        self.close()
 
+    def set_time_interval(self, interval):
+        """设置操作时间间隔"""
+        self.T = interval
+
+    # 异常函数
+    def catch_ex(self, handler_type):
+        handlers_cn = {
+            '0': '读取单元格内容',
+            '1': '写入数据',
+            '2': '调整行列尺寸',
+            '3': '调整适当的行列尺寸',
+            '4': '设置数字格式',
+            '5': '设置对齐方式',
+            '6': '设置边框线型',
+            '7': '设置边框粗细',
+            '8': '设置边框颜色',
+            '9': '设置单元格颜色',
+            '10': '合并单元格',
+            '11': '取消合并单元格',
+            '12': '隐藏行列',
+            '13': '设置字体名称',
+            '14': '设置字体大小',
+            '15': '设置字体颜色',
+            '16': '设置文字加粗',
+            '17': '设置文字斜体',
+            '18': '设置下划线',
+            '19': '设置删除线',
+            '20': '查找',
+            '21': '数据排序',
+            '22': '自动筛选',
+            '23': '取消筛选',
+            '24': '创建图表'
+        }
+        return f'{handlers_cn[handler_type]}错误'
+
+    # 返回错误列表
+    def get_error(self):
+        pass
+        return self.error_list
+
+
+    # 得到所有数据的总范围
+    def get_global_range(self):
+        abs_addr = self.worksheet.used_range
+        rel_addr = abs_addr.get_address(row_absolute=False, column_absolute=False)
+        print(rel_addr)
+        return rel_addr
+
+
+
+
+
+    def hex_color_to_int(self, hex_color):
+
+        hex_color = hex_color.lstrip('#').upper()
+
+        red = int(hex_color[0:2], 16)
+        green = int(hex_color[2:4], 16)
+        blue = int(hex_color[4:6], 16)
+        color_int = (red << 16) | (green << 8) | blue
+        return color_int
+        # 改变单元格属性_边框颜色，others=[color]
 
     # 读,others=none
     def handle_read(self, cmd):
@@ -213,16 +253,7 @@ class ExcelAutomation:
             target_cell.api.Borders(line).Weight = int(cmd[3])
         time.sleep(self.T)
 
-    def hex_color_to_int(self, hex_color):
 
-        hex_color = hex_color.lstrip('#').upper()
-
-        red = int(hex_color[0:2], 16)
-        green = int(hex_color[2:4], 16)
-        blue = int(hex_color[4:6], 16)
-        color_int = (red << 16) | (green << 8) | blue
-        return color_int
-        # 改变单元格属性_边框颜色，others=[color]
 
     def handle_border_color(self, cmd):
         target_cell = self.worksheet.range(cmd[2])
@@ -421,23 +452,7 @@ class ExcelAutomation:
         time.sleep(2 * self.T)
 
 
-    def set_time_interval(self, interval):
-        """设置操作时间间隔"""
-        self.T = interval
-    def  get_error(self):
-        pass
-        return self.error_list
 
-    def close(self):
-        """关闭Excel应用"""
-        if self.workbook:
-            self.workbook.save()
-            self.workbook.close()
-        if self.app:
-            pass
-            self.app.quit()
-    def save_as(self):
-        self.workbook.save(r'备份.xlsx')
 
 
 if __name__ == "__main__":
