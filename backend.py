@@ -8,14 +8,14 @@ class ExcelAutomation:
         self.workbook = None
         self.worksheet = None
         self.find_result_list = []  # 查找结果列表
-        self.T = 1
+        self.T = 10
         self.error_list=[]
 
     def open_excel(self, path):
         self.app = xw.App(add_book=False, visible=True)
         self.workbook = self.app.books.open(path)
         self.worksheet = self.workbook.sheets[0]
-        time.sleep(3)
+        time.sleep(2)
 
     def save_as(self,path):
         self.app = xw.App(add_book=False, visible=False)
@@ -42,7 +42,7 @@ class ExcelAutomation:
         # 遍历指令列表
         for cmd in cmds_list:
             self.handler(cmd)
-        self.close()
+        # self.close()
 
     # 分割指令
     def get_cmds(self, cmd_response):
@@ -163,7 +163,6 @@ class ExcelAutomation:
     def get_global_range(self):
         abs_addr = self.worksheet.used_range
         rel_addr = abs_addr.get_address(row_absolute=False, column_absolute=False)
-        print(rel_addr)
         return rel_addr
 
 
@@ -186,7 +185,7 @@ class ExcelAutomation:
     # 写,others=[axis,value]
     def handle_write(self, cmd):
         # cmd[3]=axis,axis=0,写入行；axis=1,写入列;axis=2,写入方格
-        if cmd[3] == 0:
+        if cmd[3] =='0':
             self.worksheet.range(cmd[2]).value = cmd[4]
         elif cmd[3] == '1':
             self.worksheet.range(cmd[2]).options(transpose=True).value = cmd[4]
@@ -258,8 +257,7 @@ class ExcelAutomation:
             target_cell.api.Borders(line).Weight = int(cmd[3])
         time.sleep(self.T)
 
-
-
+    # 改变单元格属性_边框颜色，others=[color]
     def handle_border_color(self, cmd):
         target_cell = self.worksheet.range(cmd[2])
         color = self.hex_color_to_int(cmd[3])
@@ -288,9 +286,15 @@ class ExcelAutomation:
     def handle_hide(self, cmd):
         # cmd[3]=axis,axis=0,隐藏行；axis=1,隐藏列
         if cmd[3] == '0':
-            self.worksheet.range(cmd[2]).rows.hidden = True
+            digit_part = cmd[2][1]
+            row= f"{digit_part}:{digit_part}"
+            print(row)
+            self.worksheet.range(row).api.Rows.hidden = True
         elif cmd[3] == '1':
-            self.worksheet.range(cmd[2]).columns.hidden = True
+            letter_part = cmd[2][0]
+            column = f"{letter_part}:{letter_part}"
+            print(column)
+            self.worksheet.range(column).api.Columns.hidden = True
         time.sleep(self.T)
 
     # 改变单元格文本的字体，others=[name]
@@ -356,12 +360,10 @@ class ExcelAutomation:
         while found_cell:
             current_addr = found_cell.GetAddress(False, False)
             found_addresses.append(current_addr)
-
             found_cell = self.worksheet.range(target_range).api.FindNext(found_cell)
-
             if found_cell and found_cell.GetAddress(False, False) == first_addr:
                 break
-
+        print(found_addresses)
         self.find_result_list.append(found_addresses)
         time.sleep(self.T)
 
@@ -461,7 +463,7 @@ class ExcelAutomation:
 
 if __name__ == "__main__":
     response='''
-    1,0,A4,测试,67,VREN1;5
+    20,0,0,刘;17,1,A1,1
     '''
     excel = ExcelAutomation()
     excel.backend_main(r"C:\Users\1\Desktop\学业奖学金公示名单.xlsx", response)
