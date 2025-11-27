@@ -44,6 +44,7 @@ class ExcelAutomation:
             self.handler(cmd)
         self.close()
 
+
     # 分割指令
     def get_cmds(self, cmd_response):
 

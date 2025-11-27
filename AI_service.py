@@ -1,6 +1,6 @@
 import requests
 url = 'https://spark-api-open.xf-yun.com/v1/chat/completions'
-api_key ='Bearer '
+api_key ='Bearer OataHkQJLFHwMVXzAxkC:nhkJFGiLNxpRmwCwRDQP'
 
 PROMPT_AI_FOR_DIVIDE_DIVIDER = """
 ## 角色

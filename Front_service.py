@@ -211,7 +211,7 @@ class ExcelOperationGUI:
             try:
                 excel=ExcelAutomation()
                 excel.backend_main(self.file_path, encoded_commend)
-                backend_result =excel.get_result()
+                backend_result = excel.get_result()
                 messagebox.showinfo(
                     "Excel操作成功",
                     f"Excel操作执行完成！\n\n后端返回结果：\n{backend_result}"
