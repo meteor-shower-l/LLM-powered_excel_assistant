@@ -362,7 +362,6 @@ class ExcelAutomation:
             if found_cell and found_cell.GetAddress(False, False) == first_addr:
                 break
 
-        print(f'查找结果为：{found_addresses}')
         self.find_result_list.append(found_addresses)
         time.sleep(self.T)
 
