@@ -1,6 +1,18 @@
 import requests
-url = 'https://spark-api-open.xf-yun.com/v1/chat/completions'
-api_key ='Bearer '
+import os
+
+def get_path(name):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(script_dir, name)
+    return path
+
+def get_APIKEY(path):
+    with open (get_path(path),'r',encoding='utf-8') as f:
+       APIKEY = f.readline().strip()
+    return APIKEY
+
+URL = 'https://spark-api-open.xf-yun.com/v1/chat/completions'
+APIKEY = get_APIKEY('APIKEY.txt')
 
 PROMPT_AI_FOR_DIVIDE_DIVIDER = """
 ## 角色
@@ -473,6 +485,7 @@ Y轴数据所在列的字母:例如B
 - 你只需要且只能返回数字1或0，其中1代表分解无误，0代表分解错误。
 - 再次重申与强调，你的输出应该是一个单独的数字，只能是0或1
 """
+   
 def integrate_history_records(history_records):
     history_records_str =""
     flag =1
@@ -484,7 +497,7 @@ def integrate_history_records(history_records):
 def get_answer(message):
 #初始化请求体
     headers = {
-        'Authorization':api_key,
+        'Authorization':APIKEY,
         'content-type': "application/json"
     }
     body = {
@@ -508,7 +521,7 @@ def get_answer(message):
             }
         ]
     }
-    response = requests.post(url=url,json = body,headers= headers)
+    response = requests.post(url=URL,json = body,headers= headers)
     if('error' in response.json()):
         return "运行错误"
     else:
@@ -560,3 +573,5 @@ def AI_for_coding(commend):
     response_of_examiner = get_answer(message_for_examiner)
     flag +=1
   return response_of_coder
+
+print(get_answer('你好，你是谁'))
