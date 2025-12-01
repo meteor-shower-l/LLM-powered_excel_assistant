@@ -111,7 +111,7 @@ class ExcelAutomation:
                     each_cmd = cmd.copy()
                     each_cmd[2] = each_range
                     try:
-                       handlers[handler_type](each_cmd)
+                        handlers[handler_type](each_cmd)
                     except:
                         self.error_list.append(self.catch_ex(handler_type))
             else:
@@ -181,6 +181,27 @@ class ExcelAutomation:
         bool_dict = {'0': False, '1': True}
         return bool_dict[str]
 
+    #  从单元格引用中提取列范围
+    def get_col_range(self,cell_ref):
+        if ':' in cell_ref:
+            start_cell, end_cell = cell_ref.split(':', 1)
+            start_col = ''.join([c for c in start_cell if c.isalpha()])
+            end_col = ''.join([c for c in end_cell if c.isalpha()])
+            return f"{start_col}:{end_col}"
+        else:
+            col_letters = ''.join([c for c in cell_ref if c.isalpha()])
+            return f"{col_letters}:{col_letters}"
+
+    #   从单元格引用中提取行范围。
+    def get_row_range(self,cell_ref):
+        if ':' in cell_ref:
+            start_cell, end_cell = cell_ref.split(':', 1)
+            start_row = ''.join([c for c in start_cell if c.isdigit()])
+            end_row = ''.join([c for c in end_cell if c.isdigit()])
+            return f"{start_row}:{end_row}"
+        else:
+            row_digits = ''.join([c for c in cell_ref if c.isdigit()])
+            return f"{row_digits}:{row_digits}"
 
     # 读,others=none
     def handle_read(self, cmd):
@@ -210,9 +231,13 @@ class ExcelAutomation:
     def handle_autofit_axis_size(self, cmd):
         # cmd[3]=axis,axis=0,改变行高；axis=1,改变列宽,axis=2,both
         if cmd[3] == '0':
-            self.worksheet.range(cmd[2]).rows.autofit()
+            row = self.get_row_range(cmd[2])
+            self.worksheet.range(row).rows.autofit()
+            print(0)
         elif cmd[3] == '1':
-            self.worksheet.range(cmd[2]).columns.autofit()
+            column = self.get_col_range(cmd[2])
+            self.worksheet.range(column).columns.autofit()
+            print(1)
         elif cmd[3] == '2':
             self.worksheet.range(cmd[2]).autofit()
         time.sleep(self.T)
@@ -238,9 +263,9 @@ class ExcelAutomation:
 
         # cmd[3]=align_way,align_way=0,水平对齐；align_way=1,垂直对齐,align_way=2,自动换行
         if cmd[3] == '0':
-            self.worksheet.range(cmd[2]).api.HorizontalAlignment = align1[int(cmd[4])]
+            self.worksheet.range(cmd[2]).api.HorizontalAlignment = align1[int(cmd[4])-1]
         elif cmd[3] == '1':
-            self.worksheet.range(cmd[2]).api.VerticalAlignment = align2[int(cmd[4])]
+            self.worksheet.range(cmd[2]).api.VerticalAlignment = align2[int(cmd[4])-1]
         elif cmd[3] == '2':
             self.worksheet.range(cmd[2]).api.WrapText = True
         time.sleep(self.T)
@@ -289,14 +314,10 @@ class ExcelAutomation:
     def handle_hide(self, cmd):
         # cmd[3]=axis,axis=0,隐藏行；axis=1,隐藏列
         if cmd[3] == '0':
-            digit_part = cmd[2][1]
-            row= f"{digit_part}:{digit_part}"
-            print(row)
+            row = self.get_row_range(cmd[2])
             self.worksheet.range(row).api.Rows.hidden = True
         elif cmd[3] == '1':
-            letter_part = cmd[2][0]
-            column = f"{letter_part}:{letter_part}"
-            print(column)
+            column = self.get_col_range(cmd[2])
             self.worksheet.range(column).api.Columns.hidden = True
         time.sleep(self.T)
 
@@ -327,7 +348,7 @@ class ExcelAutomation:
 
     # 改变单元格文本下划线，others=[underline_id]
     def handle_text_underline(self, cmd):
-        underline_type=[4, 5, -4119]
+        underline_type=[-4142, 4, 5, -4119]
         self.worksheet.range(cmd[2]).api.Font.Underline = underline_type[int(cmd[3])]
         time.sleep(self.T)
     # 4 或 True 单下划线, 5 双下划线, -4119 粗双下划线
@@ -395,7 +416,7 @@ class ExcelAutomation:
         time.sleep(self.T)
 
     # 取消筛选，others=none
-    def handle_deautofilter(self):
+    def handle_deautofilter(self, cmd):
         if self.worksheet.api.AutoFilterMode:
             self.worksheet.api.AutoFilterMode = False
         time.sleep(self.T)
@@ -406,7 +427,7 @@ class ExcelAutomation:
         x_col = cmd[3]
         y_col = cmd[4]
         chart_type_idx = int(cmd[5])
-        chart_title = cmd[6] if len(cmd) > 6 else None
+        chart_title = cmd[6]
 
         # 获取X轴和Y轴的列标题（假设在第一行）
         x_title = self.worksheet.range(f'{x_col}1').value
@@ -417,7 +438,7 @@ class ExcelAutomation:
         y_data = self.worksheet.range(f'{y_col}{2}').expand('down').value
 
         # 自动生成图表标题
-        if chart_title is None:
+        if chart_title == 'None':
             chart_title = f"{y_title} vs {x_title}"
 
         # 创建临时工作表
@@ -462,7 +483,7 @@ class ExcelAutomation:
 
 if __name__ == "__main__":
     response='''
-    20,0,0,刘;17,1,A1,1;17,1,A1,0
+    24,0,0,B,A,1,None
     '''
     excel = ExcelAutomation()
     excel.backend_main(r"C:\Users\1\Desktop\学业奖学金公示名单.xlsx", response)
