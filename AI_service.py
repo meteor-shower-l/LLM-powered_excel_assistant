@@ -574,4 +574,3 @@ def AI_for_coding(commend):
     flag +=1
   return response_of_coder
 
-print(get_answer('你好，你是谁'))
