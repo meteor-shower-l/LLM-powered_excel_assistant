@@ -8,16 +8,16 @@ class ExcelAutomation:
         self.workbook = None
         self.worksheet = None
         self.find_result_list = []  # 查找结果列表
-        self.T = 10
-        self.error_list=[]
+        self.error_list=[]  # 错误列表
+        self.T = 2
 
     def open_excel(self, path):
         self.app = xw.App(add_book=False, visible=True)
         self.workbook = self.app.books.open(path)
         self.worksheet = self.workbook.sheets[0]
-        time.sleep(2)
+        time.sleep(3)
 
-    def save_as(self,path):
+    def save_as(self, path):
         self.app = xw.App(add_book=False, visible=False)
         self.workbook = self.app.books.open(path)
         self.worksheet = self.workbook.sheets[0]
@@ -35,6 +35,7 @@ class ExcelAutomation:
             self.app.quit()
 
 
+
     def backend_main(self, path, respond):
         self.save_as(path)
         self.open_excel(path)
@@ -45,9 +46,9 @@ class ExcelAutomation:
         # self.close()
 
 
+
     # 分割指令
     def get_cmds(self, cmd_response):
-
         # 按顺序分割：先分号，再逗号，最后加号
         cmds = [
             [
@@ -114,8 +115,7 @@ class ExcelAutomation:
                     except:
                         self.error_list.append(self.catch_ex(handler_type))
             else:
-               self.error_list.append(f"未知操作类型")
-
+                self.error_list.append(f"未知操作类型")
 
     def set_time_interval(self, interval):
         """设置操作时间间隔"""
@@ -157,8 +157,7 @@ class ExcelAutomation:
         if self.error_list:
             return self.error_list
         else:
-            return('success')
-
+            return 'success'
 
     # 得到所有数据的总范围
     def get_global_range(self):
@@ -166,8 +165,7 @@ class ExcelAutomation:
         rel_addr = abs_addr.get_address(row_absolute=False, column_absolute=False)
         return rel_addr
 
-
-
+    # 处理颜色
     def hex_color_to_int(self, hex_color):
 
         hex_color = hex_color.lstrip('#').upper()
@@ -177,7 +175,12 @@ class ExcelAutomation:
         blue = int(hex_color[4:6], 16)
         color_int = (red << 16) | (green << 8) | blue
         return color_int
-        # 改变单元格属性_边框颜色，others=[color]
+
+    # 将str转为bool
+    def str_to_bool(self, str):
+        bool_dict = {'0': False, '1': True}
+        return bool_dict[str]
+
 
     # 读,others=none
     def handle_read(self, cmd):
@@ -267,7 +270,6 @@ class ExcelAutomation:
 
         time.sleep(self.T)
 
-
     # 改变单元格属性_颜色，others=[color]
     def handle_color(self, cmd):
         self.worksheet.range(cmd[2]).color = (cmd[3])
@@ -315,12 +317,12 @@ class ExcelAutomation:
 
     # 改变单元格文本加粗，others=[is_bold]
     def handle_text_bold(self, cmd):
-        self.worksheet.range(cmd[2]).font.bold = cmd[3]
+        self.worksheet.range(cmd[2]).font.bold = self.str_to_bool(cmd[3])
         time.sleep(self.T)
 
     # 改变单元格文本斜体，others=[is_italic]
     def handle_text_italic(self, cmd):
-        self.worksheet.range(cmd[2]).font.italic = cmd[3]
+        self.worksheet.range(cmd[2]).font.italic = self.str_to_bool(cmd[3])
         time.sleep(self.T)
 
     # 改变单元格文本下划线，others=[underline_id]
@@ -328,14 +330,12 @@ class ExcelAutomation:
         underline_type=[4, 5, -4119]
         self.worksheet.range(cmd[2]).api.Font.Underline = underline_type[int(cmd[3])]
         time.sleep(self.T)
-
     # 4 或 True 单下划线, 5 双下划线, -4119 粗双下划线
 
     # 改变单元格文本删除线，others=[is_strike]
     def handle_text_strike(self, cmd):
-        self.worksheet.range(cmd[2]).api.Font.Strikethrough = cmd[3]
+        self.worksheet.range(cmd[2]).api.Font.Strikethrough = self.str_to_bool(cmd[3])
         time.sleep(self.T)
-
 
     # 查找,others=[target_string]
     def handle_find(self, cmd):
@@ -368,8 +368,7 @@ class ExcelAutomation:
         self.find_result_list.append(found_addresses)
         time.sleep(self.T)
 
-        # 排序，others=[key_list[key,order]]
-
+    # 排序，others=[key_list[key,order]]
     def handle_sort(self, cmd):
 
         sort_list = cmd[3]
@@ -384,8 +383,7 @@ class ExcelAutomation:
 
         time.sleep(self.T)
 
-        # 筛选，others=[field,criteria]# 列号，条件
-
+    # 筛选，others=[field,criteria]# 列号，条件
     def handle_autofilter(self, cmd):
         field_cell = self.worksheet.range(f'{cmd[3]}1')
         field_index = field_cell.column
@@ -397,7 +395,7 @@ class ExcelAutomation:
         time.sleep(self.T)
 
     # 取消筛选，others=none
-    def handle_deautofilter(self, cmd):
+    def handle_deautofilter(self):
         if self.worksheet.api.AutoFilterMode:
             self.worksheet.api.AutoFilterMode = False
         time.sleep(self.T)
@@ -464,7 +462,7 @@ class ExcelAutomation:
 
 if __name__ == "__main__":
     response='''
-    20,0,0,刘;17,1,A1,1
+    20,0,0,刘;17,1,A1,1;17,1,A1,0
     '''
     excel = ExcelAutomation()
     excel.backend_main(r"C:\Users\1\Desktop\学业奖学金公示名单.xlsx", response)
