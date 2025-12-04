@@ -8,7 +8,7 @@ import os
 class ExcelOperationGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("智能Excel文件助手")
+        self.root.title("表灵")
         self.root.geometry("700x550")
         self.root.resizable(False, False)
 
