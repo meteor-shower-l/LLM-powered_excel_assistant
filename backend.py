@@ -9,7 +9,7 @@ class ExcelAutomation:
         self.worksheet = None
         self.find_result_list = []  # 查找结果列表
         self.error_list=[]  # 错误列表
-        self.T = 2
+        self.T = 5
 
     def open_excel(self, path):
         self.app = xw.App(add_book=False, visible=True)
@@ -233,11 +233,9 @@ class ExcelAutomation:
         if cmd[3] == '0':
             row = self.get_row_range(cmd[2])
             self.worksheet.range(row).rows.autofit()
-            print(0)
         elif cmd[3] == '1':
             column = self.get_col_range(cmd[2])
             self.worksheet.range(column).columns.autofit()
-            print(1)
         elif cmd[3] == '2':
             self.worksheet.range(cmd[2]).autofit()
         time.sleep(self.T)
@@ -273,7 +271,7 @@ class ExcelAutomation:
     # 改变单元格属性_边框线型，others=[linestyle]
     def handle_border_linestyle(self, cmd):
         target_cell = self.worksheet.range(cmd[2])
-        if cmd[3] == '6':
+        if cmd[3] == '0':
             cmd[3] = -4142
         for line in range(7, 11):
             target_cell.api.Borders(line).LineStyle = int(cmd[3])
@@ -473,7 +471,6 @@ class ExcelAutomation:
 
         chart.api[1].Axes(2).HasTitle = True
         chart.api[1].Axes(2).AxisTitle.Text = y_title
-
         print(f"图表已成功创建！图表标题：'{chart_title}'")
         time.sleep(2 * self.T)
 
@@ -483,7 +480,8 @@ class ExcelAutomation:
 
 if __name__ == "__main__":
     response='''
-    24,0,0,B,A,1,None
+    6,0,A1,0;
+   18,0,B2,0
     '''
     excel = ExcelAutomation()
     excel.backend_main(r"C:\Users\1\Desktop\学业奖学金公示名单.xlsx", response)
