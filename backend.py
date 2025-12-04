@@ -43,7 +43,7 @@ class ExcelAutomation:
         # 遍历指令列表
         for cmd in cmds_list:
             self.handler(cmd)
-        # self.close()
+        
 
 
 
