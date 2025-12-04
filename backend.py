@@ -9,7 +9,7 @@ class ExcelAutomation:
         self.worksheet = None
         self.find_result_list = []  # 查找结果列表
         self.error_list=[]  # 错误列表
-        self.T = 5
+        self.T = 0.5
 
     def open_excel(self, path):
         self.app = xw.App(add_book=False, visible=True)
@@ -43,6 +43,7 @@ class ExcelAutomation:
         # 遍历指令列表
         for cmd in cmds_list:
             self.handler(cmd)
+        self.close()
         
 
 
