@@ -484,6 +484,7 @@ class ExcelAutomation:
 if __name__ == "__main__":
     response='''
     24,0,0,B,A,1,None;
+    
     '''
     excel = ExcelAutomation()
     excel.backend_main(r"C:\Users\1\Desktop\学业奖学金公示名单.xlsx", response)
