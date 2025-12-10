@@ -9,7 +9,7 @@ class ExcelAutomation:
         self.worksheet = None
         self.find_result_list = []  # 查找结果列表
         self.error_list=[]  # 错误列表
-        self.T = 0.5
+        self.T = 1
 
     def open_excel(self, path):
         self.app = xw.App(add_book=False, visible=True)
@@ -43,7 +43,6 @@ class ExcelAutomation:
         # 遍历指令列表
         for cmd in cmds_list:
             self.handler(cmd)
-        self.close()
         
 
 
@@ -168,9 +167,7 @@ class ExcelAutomation:
 
     # 处理颜色
     def hex_color_to_int(self, hex_color):
-
         hex_color = hex_color.lstrip('#').upper()
-
         red = int(hex_color[0:2], 16)
         green = int(hex_color[2:4], 16)
         blue = int(hex_color[4:6], 16)
@@ -407,7 +404,6 @@ class ExcelAutomation:
     def handle_autofilter(self, cmd):
         field_cell = self.worksheet.range(f'{cmd[3]}1')
         field_index = field_cell.column
-        print(field_index)
         if cmd[2] == '0':
             cmd[2] = self.get_global_range()
         criteria = cmd[4]
@@ -421,6 +417,8 @@ class ExcelAutomation:
         time.sleep(self.T)
 
     # 制图，others=[x_col, y_col, chart_type, chart_title]
+
+
     def handle_chart(self, cmd):
         chart_type_list = ['column_clustered', 'line']
         x_col = cmd[3]
@@ -433,8 +431,8 @@ class ExcelAutomation:
         y_title = self.worksheet.range(f'{y_col}1').value
 
         # 读取X轴和Y轴的数据
-        x_data = self.worksheet.range(f'{x_col}{2}').expand('down').value
-        y_data = self.worksheet.range(f'{y_col}{2}').expand('down').value
+        x_data = self.worksheet.range(f'{x_col}2').expand('down').value
+        y_data = self.worksheet.range(f'{y_col}2').expand('down').value
 
         # 自动生成图表标题
         if chart_title == 'None':
@@ -443,12 +441,16 @@ class ExcelAutomation:
         # 创建临时工作表
         temp_sheet = self.workbook.sheets.add()
 
-        # 将数据写入临时工作表
-        temp_sheet.range('A1').value = [x_title]
-        temp_sheet.range('A2').value = [[x] for x in (x_data if isinstance(x_data, list) else [x_data])]
-        temp_sheet.range('B1').value = [y_title]
-        temp_sheet.range('B2').value = [[y] for y in (y_data if isinstance(y_data, list) else [y_data])]
+        # 将数据写入临时工作表 - 修正数据写入方式
+        temp_sheet.range('A1').value = x_title
+        temp_sheet.range('B1').value = y_title
 
+        # 正确写入数据：确保X轴数据在A列，Y轴数据在B列
+        for i, (x_val, y_val) in enumerate(zip(x_data, y_data), start=2):
+            temp_sheet.range(f'A{i}').value = x_val
+            temp_sheet.range(f'B{i}').value = y_val
+
+        # 获取数据范围
         data_range = temp_sheet.range('A1').expand('table')
 
         # 计算图表位置
@@ -472,17 +474,16 @@ class ExcelAutomation:
 
         chart.api[1].Axes(2).HasTitle = True
         chart.api[1].Axes(2).AxisTitle.Text = y_title
+
         print(f"图表已成功创建！图表标题：'{chart_title}'")
         time.sleep(2 * self.T)
 
 
 
 
-
 if __name__ == "__main__":
     response='''
-    6,0,A1,0;
-   18,0,B2,0
+    24,0,0,B,A,1,None;
     '''
     excel = ExcelAutomation()
     excel.backend_main(r"C:\Users\1\Desktop\学业奖学金公示名单.xlsx", response)
