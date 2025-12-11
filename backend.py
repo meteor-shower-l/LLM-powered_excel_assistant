@@ -354,36 +354,83 @@ class ExcelAutomation:
         self.worksheet.range(cmd[2]).api.Font.Strikethrough = self.str_to_bool(cmd[3])
         time.sleep(self.T)
 
+
     # 查找,others=[target_string]
-    def handle_find(self, cmd):
-        target_range = cmd[2]
-        target_string = cmd[3]
-        first_found = self.worksheet.range(target_range).api.Find(
-            What=target_string,
-            LookIn=xw.constants.FindLookIn.xlValues,
-            LookAt=xw.constants.LookAt.xlWhole,
-            SearchOrder=xw.constants.SearchOrder.xlByRows,
-            SearchDirection=xw.constants.SearchDirection.xlNext,
-            MatchCase=False
-        )
-
-        if not first_found:
-            self.find_result_list.append([])
-            return
-
-        found_addresses = []
-        found_cell = first_found
-        first_addr = found_cell.GetAddress(False, False)
-
-        while found_cell:
-            current_addr = found_cell.GetAddress(False, False)
-            found_addresses.append(current_addr)
-            found_cell = self.worksheet.range(target_range).api.FindNext(found_cell)
-            if found_cell and found_cell.GetAddress(False, False) == first_addr:
-                break
-        print(found_addresses)
-        self.find_result_list.append(found_addresses)
-        time.sleep(self.T)
+    def handle_find(self,cmd):
+        def parse_condition(condition_str):
+            condition_str = condition_str.strip()
+            # 包含条件（使用*通配符）
+            if condition_str.startswith('*') and condition_str.endswith('*'):
+                return 'contains', condition_str[1:-1]
+            # 大于等于
+            elif condition_str.startswith('>='):
+                return '>=', condition_str[2:]
+            # 小于等于
+            elif condition_str.startswith('<='):
+                return '<=', condition_str[2:]
+            # 不等于
+            elif condition_str.startswith('!='):
+                return '!=', condition_str[2:]
+            # 大于
+            elif condition_str.startswith('>'):
+                return '>', condition_str[1:]
+            # 小于
+            elif condition_str.startswith('<'):
+                return '<', condition_str[1:]
+            # 等于
+            elif condition_str.startswith('='):
+                return '==', condition_str[1:]
+            # 默认视为等于
+            else:
+                return '==', condition_str
+        def check_condition(cell_value, operator, condition_value):
+            # 处理空单元格
+            if cell_value is None:
+                return False
+            try:
+                # 尝试将条件值转换为数字（如果可能）
+                try:
+                    condition_num = float(condition_value)
+                    cell_num = float(cell_value)
+                    use_numeric = True
+                except (ValueError, TypeError):
+                    use_numeric = False
+                # 根据操作符进行比较
+                if operator == 'contains':
+                    return str(condition_value) in str(cell_value)
+                elif use_numeric:
+                    if operator == '>': return cell_num > condition_num
+                    elif operator == '<': return cell_num < condition_num
+                    elif operator == '>=': return cell_num >= condition_num
+                    elif operator == '<=': return cell_num <= condition_num
+                    elif operator == '!=': return cell_num != condition_num
+                    elif operator == '==': return cell_num == condition_num
+                else:
+                    # 字符串比较
+                    cell_str = str(cell_value)
+                    cond_str = str(condition_value)
+                    if operator == '>': return cell_str > cond_str
+                    elif operator == '<': return cell_str < cond_str
+                    elif operator == '>=': return cell_str >= cond_str
+                    elif operator == '<=': return cell_str <= cond_str
+                    elif operator == '!=': return cell_str != cond_str
+                    elif operator == '==': return cell_str == cond_str
+            except Exception:
+                return False
+            return False
+        used_range = self.worksheet.used_range
+        # 解析条件
+        operator, value = parse_condition(cmd[3])
+        # 存储匹配的单元格地址
+        matched_cells = []
+        # 遍历所有单元格
+        for cell in used_range:
+            cell_value = cell.value
+            # 检查单元格值是否符合条件
+            if check_condition(cell_value, operator, value):
+                matched_cells.append(cell.get_address(False,False))
+        print(matched_cells)
+        self.find_result_list.append(matched_cells)
 
     # 排序，others=[key_list[key,order]]
     def handle_sort(self, cmd):
@@ -483,11 +530,11 @@ class ExcelAutomation:
 
 if __name__ == "__main__":
     response='''
-    24,0,0,B,A,1,None;
+    20,0,0,<70
     
     '''
     excel = ExcelAutomation()
-    excel.backend_main(r"C:\Users\1\Desktop\学业奖学金公示名单.xlsx", response)
+    excel.backend_main(r"D:\.unwindows\4.university_file\北邮\1.计算机\程序设计综合实验\展示\示例文件.xlsx", response)
     print(excel.get_result())
 
 
