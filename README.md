@@ -26,11 +26,8 @@ excel_assistant
 │
 ├── favicon.ico                # 程序图标文件
 │
-├─  dist/                      # 打包后的可执行文件目录
-│   └─ 表灵.exe                 # 最终生成的GUI可执行文件
+├─  表灵.exe                    # 最终生成的GUI可执行文件
 │
-├── Front_service.spec         # PyInstaller打包配置文件
-├── build                      # PyInstaller打包过程的临时文件
 └── README.md                  # 项目说明
 ```
 
