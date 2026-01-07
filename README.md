@@ -34,8 +34,10 @@ excel_assistant
 ## 环境要求
 
 - Python 3.7+
-- Windows系统（xlwings需要Excel支持）
+- Windows系统
 - Excel 2010或更高版本
+- xlwings库
+- requests库
 
 ## 通信流程
 
